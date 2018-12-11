@@ -1,0 +1,5 @@
+C:\Users\luyinjie.HW\Desktop\Publish\Debug\netcoreapp2.1\TapdCollect.deps.json
+C:\Users\luyinjie.HW\Desktop\Publish\Debug\netcoreapp2.1\TapdCollect.runtimeconfig.json
+C:\Users\luyinjie.HW\Desktop\Publish\Debug\netcoreapp2.1\TapdCollect.runtimeconfig.dev.json
+C:\Users\luyinjie.HW\Desktop\Publish\Debug\netcoreapp2.1\TapdCollect.dll
+C:\Users\luyinjie.HW\Desktop\Publish\Debug\netcoreapp2.1\TapdCollect.pdb

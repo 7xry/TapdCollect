@@ -1,0 +1,12 @@
+C:\Users\luyinjie.HW\Desktop\TapdCollect\Publish\Release\netcoreapp2.1\NLog.config
+C:\Users\luyinjie.HW\Desktop\TapdCollect\Publish\Release\netcoreapp2.1\TapdCollect.deps.json
+C:\Users\luyinjie.HW\Desktop\TapdCollect\Publish\Release\netcoreapp2.1\TapdCollect.runtimeconfig.json
+C:\Users\luyinjie.HW\Desktop\TapdCollect\Publish\Release\netcoreapp2.1\TapdCollect.runtimeconfig.dev.json
+C:\Users\luyinjie.HW\Desktop\TapdCollect\Publish\Release\netcoreapp2.1\TapdCollect.dll
+C:\Users\luyinjie.HW\Desktop\TapdCollect\Publish\Release\netcoreapp2.1\TapdCollect.pdb
+C:\Users\luyinjie.HW\Desktop\TapdCollect\TapdCollect\obj\Release\netcoreapp2.1\TapdCollect.vbprojAssemblyReference.cache
+C:\Users\luyinjie.HW\Desktop\TapdCollect\TapdCollect\obj\Release\netcoreapp2.1\TapdCollect.vbproj.CoreCompileInputs.cache
+C:\Users\luyinjie.HW\Desktop\TapdCollect\TapdCollect\obj\Release\netcoreapp2.1\TapdCollect.AssemblyInfoInputs.cache
+C:\Users\luyinjie.HW\Desktop\TapdCollect\TapdCollect\obj\Release\netcoreapp2.1\TapdCollect.AssemblyInfo.vb
+C:\Users\luyinjie.HW\Desktop\TapdCollect\TapdCollect\obj\Release\netcoreapp2.1\TapdCollect.dll
+C:\Users\luyinjie.HW\Desktop\TapdCollect\TapdCollect\obj\Release\netcoreapp2.1\TapdCollect.pdb

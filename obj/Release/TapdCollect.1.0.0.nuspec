@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>TapdCollect</id>
+    <version>1.0.0</version>
+    <authors>MicroWork</authors>
+    <owners>MicroWork</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Tapd采集工具</description>
+    <copyright>hotwind.net</copyright>
+    <dependencies>
+      <group targetFramework=".NETCoreApp2.1">
+        <dependency id="Microsoft.NETCore.App" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="MySql.Data" version="8.0.13" exclude="Build,Analyzers" />
+        <dependency id="NLog" version="4.5.11" exclude="Build,Analyzers" />
+        <dependency id="NLog.Config" version="4.5.11" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="12.0.1" exclude="Build,Analyzers" />
+        <dependency id="RestSharp" version="106.5.4" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\Users\luyinjie.HW\Desktop\TapdCollect\Publish\Release\netcoreapp2.1\TapdCollect.runtimeconfig.json" target="lib\netcoreapp2.1\TapdCollect.runtimeconfig.json" />
+    <file src="C:\Users\luyinjie.HW\Desktop\TapdCollect\Publish\Release\netcoreapp2.1\TapdCollect.dll" target="lib\netcoreapp2.1\TapdCollect.dll" />
+  </files>
+</package>
