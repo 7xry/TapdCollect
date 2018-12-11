@@ -1,8 +1,10 @@
 # TapdCollect
 第一次使用注意事项
+
 1、安装.Net Croe Runtime
 windows版本下载地址：
 https://download.visualstudio.microsoft.com/download/pr/48adfc75-bce7-4621-ae7a-5f3c4cf4fc1f/9a8e07173697581a6ada4bf04c845a05/dotnet-hosting-2.2.0-win.exe
+
 2、运行SetUp(手动运行).bat，进行参数配置 
 需要配置，配置过程中需要确认输入，请按回车确认
 >>>>>>>>>> 1、Api_User				由Tapd官方提供
