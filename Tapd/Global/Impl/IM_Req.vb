@@ -22,12 +22,13 @@ Namespace Tapd.Global.Impl
         'End Function
 
         Public Shared Function DoGet(ByVal ReqParm As MD_Request) As MD_Tapd
+            Dim response As IRestResponse = Nothing
             Try
                 Dim rest As New RestClient(ReqParm.BaseUrl)
                 rest.Authenticator = New HttpBasicAuthenticator(Cfg_Constant.AuthUserName, Cfg_Constant.AuthPassWord)
                 Dim request As New RestRequest($"{ReqParm.RequestUrl}?{ReqParm.ParmStr}", Method.GET)
                 request.AddHeader("Content-Type", "application/json; charset=utf-8")
-                Dim response As IRestResponse = rest.Execute(request)
+                response = rest.Execute(request)
                 IM_Log.Showlog($"RequestURL：{ReqParm.BaseUrl}/{ReqParm.RequestUrl}?{ReqParm.ParmStr}", MsgType.InfoMsg)
                 Threading.Thread.Sleep(1000)
                 Dim tapd As MD_Tapd = JsonConvert.DeserializeObject(Of MD_Tapd)(response.Content)
@@ -37,7 +38,7 @@ Namespace Tapd.Global.Impl
                 End If
                 Return tapd
             Catch ex As Exception
-                IM_Log.Showlog($"调用接口失败！{IM_AppPath.NewLine()}{ex.ToString()}",MsgType.ErrorMsg)
+                IM_Log.Showlog($"调用接口失败！{IM_AppPath.NewLine()}{ex.ToString()}{IM_AppPath.NewLine()}{response.Content}",MsgType.ErrorMsg)
                 Return Nothing
             End Try
         End Function
