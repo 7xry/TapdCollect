@@ -17,13 +17,17 @@ Imports TapdCollect.Utils.FileSystem.Impl.Path
 Namespace Tapd.Project.Impl
     Public Class IM_Tapd_Project
         Public Shared Function GetList() As List(Of MD_Tapd_Project)
+            Dim ProjectList As New List(Of MD_Tapd_Project)
             Dim ReqParm As New MD_Request() With{
                     .BaseUrl=Cfg_Constant.BaseUrl,
                     .RequestUrl=Cfg_Constant.WorkspacesProjects,
                     .ParmStr=$"company_id={Cfg_Constant.CompanyId}" 
                     }
             Dim tapd As MD_Tapd=IM_Req.DoGet(ReqParm)
-            Dim ProjectList As New List(Of MD_Tapd_Project)
+            If tapd Is Nothing Then
+                IM_Log.Showlog($"接口 [ {ReqParm.BaseUrl}/{ReqParm.RequestUrl}?{ReqParm.ParmStr} ] 请求返回异常", MsgType.ErrorMsg)
+                Return ProjectList
+            End If
             For dataIdx as Integer=0 To tapd.data.Count-1
                 Dim project As MD_Tapd_Project=JsonConvert.DeserializeObject(Of MD_Tapd_Project)(tapd.data(dataIdx)("Workspace").ToString())
                 If project.status="closed" Then

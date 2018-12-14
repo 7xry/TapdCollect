@@ -5,7 +5,9 @@ Namespace Tapd.Global.Config
         Public Property AuthUserName as String
         Public Property AuthPassWord as String
         Public Property CompanyId as String
-        Public Property PageLimit as String
+        Public Property PageLimit as Integer
+        Public Property RetryLimit As Integer
+        Public Property IsKeepHistory As Boolean
         Public Property ConfigFilePath As String =$"{IM_AppPath.GetPath }\TapdCollect.config"
 
 

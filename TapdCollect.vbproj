@@ -6,8 +6,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Authors>MicroWork</Authors>
-    <Company>Hotwind</Company>
+    <Authors>popolyj</Authors>
+    <Company>hotwind</Company>
     <Description>Tapd采集工具</Description>
     <Copyright>hotwind.net</Copyright>
     <StartupObject>TapdCollect.Program</StartupObject>

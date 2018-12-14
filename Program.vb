@@ -11,12 +11,9 @@ Imports TapdCollect.Tapd.Story.Impl
 Imports TapdCollect.Tapd.Task.Impl
 Imports TapdCollect.Tapd.TCase.Impl
 Imports TapdCollect.Tapd.Workflow.Impl
-Imports TapdCollect.Utils.DataBase.Dict
-Imports TapdCollect.Utils.DataBase.Model
 Imports TapdCollect.Utils.FileSystem.Dict
 Imports TapdCollect.Utils.FileSystem.Impl.Log
 Imports TapdCollect.Utils.FileSystem.Impl.Path
-Imports TapdCollect.Utils.FileSystem.Impl.Security
 
 Module Program
     Sub Main(args As String())
@@ -56,7 +53,7 @@ Module Program
                 IM_Log.Showlog($"采集任务执行成功！共计耗时 {Math.Round(sw.Elapsed.TotalSeconds, 0)} 秒", MsgType.InfoMsg)
             Else
                 IM_Log.Showlog($"采集任务执行没有全部执行成功！请确认！", MsgType.InfoMsg)
-                IM_Log.WaitForDo()
+                'IM_Log.WaitForDo()
             End If
             Return
         End If
@@ -213,6 +210,10 @@ Module Program
                 .ParmStr=$"company_id={CompanyId}" 
                 }
         Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+        If tapd Is Nothing Then
+            IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+            Return False
+        End If
         If IM_Tapd_Project.Delete = False Then
             IM_Log.Showlog($"删除{operate}失败！", MsgType.InfoMsg)
             IM_Log.WaitForDo()
@@ -245,7 +246,7 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         Dim AllowSystem() As String = {"story", "bug"}
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
@@ -263,6 +264,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&system={System}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 Dim dic = JsonConvert.DeserializeObject (Of Dictionary(Of String,String))(tapd.data.ToString())
                 ResultFlag = IM_Tapd_StatusMap.Sync(dic, workspace_id, System)
                 If ResultFlag = False Then
@@ -302,7 +307,7 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         Dim CustomFieldsSettingList() As String = {StoriesCustomFieldsSettings, BugsCustomFieldsSettings, TasksCustomFieldsSettings, IterationsCustomFieldsSettings}
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
@@ -319,6 +324,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Custom_Fields_Settings.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -357,12 +366,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Story_Categories.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Story_Categories.GetCount(workspace_id)
+            If MaxCount is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -382,6 +395,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Story_Categories.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -420,12 +437,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_TCase_Categories.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_TCase_Categories.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -445,6 +466,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_TCase_Categories.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -483,12 +508,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Stories.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Stories.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -508,6 +537,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Stories.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -546,12 +579,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Bugs.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Bugs.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -571,6 +608,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Bugs.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -610,12 +651,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Tasks.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Tasks.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -635,6 +680,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Tasks.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -673,12 +722,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Test_Plans.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Test_Plans.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -698,6 +751,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Test_Plans.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -736,12 +793,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_TCases.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_TCases.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -761,6 +822,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_TCases.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -799,12 +864,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Story_Changes.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Story_Changes.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -824,6 +893,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Story_Changes.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -862,12 +935,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Bug_Changes.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Bug_Changes.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -887,6 +964,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Bug_Changes.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -925,12 +1006,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Launch_Forms.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Launch_Forms.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -950,6 +1035,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Launch_Forms.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -988,12 +1077,16 @@ Module Program
             IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
             Return False
         End If
-        Dim ResultFlag = True
+        Dim ResultFlag = False
         For projectIdx = 0 To ProjectList.Count - 1
             Dim project As MD_Tapd_Project = ProjectList(projectIdx)
             IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
             Dim workspace_id as String = project.id
-            Dim MaxCount as Integer = IM_Tapd_Releases.GetCount(workspace_id)
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Releases.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
             Dim MaxPage = CInt(MaxCount\PageLimit)
             If MaxCount Mod PageLimit > 0 Then
                 MaxPage += 1
@@ -1013,6 +1106,10 @@ Module Program
                         .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Releases.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For

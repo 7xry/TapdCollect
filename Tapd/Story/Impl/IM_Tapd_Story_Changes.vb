@@ -1,7 +1,6 @@
 ﻿Imports System.Data
 Imports System.Text
 Imports Newtonsoft.Json
-Imports TapdCollect.Tapd.Bug.Model
 Imports TapdCollect.Tapd.Global.Config
 Imports TapdCollect.Tapd.Global.Impl
 Imports TapdCollect.Tapd.Global.Model
@@ -17,19 +16,26 @@ Imports TapdCollect.Utils.FileSystem.Impl.Path
 Namespace Tapd.Story.Impl
     Public Class IM_Tapd_Story_Changes
         
-        Public Shared Function GetCount(ByVal workspace_id As String) As Integer
+        Public Shared Function GetCount(ByVal workspace_id As String) As Nullable(Of Integer)
             Dim ReqParm As New MD_Request() With{
                     .BaseUrl=Cfg_Constant.BaseUrl,
                     .RequestUrl=Cfg_Constant.StoriesChangesCount,
                     .ParmStr=$"workspace_id={workspace_id}"
                     }
             Dim tapd As MD_Tapd=IM_Req.DoGet(ReqParm)
+            If tapd Is Nothing Then
+                IM_Log.Showlog($"接口 [ {ReqParm.BaseUrl}/{ReqParm.RequestUrl}?{ReqParm.ParmStr} ] 请求返回异常", MsgType.ErrorMsg)
+                Return Nothing
+            End If
             Return CInt(tapd.data("count").ToString())
         End Function
 
         Public Shared Function Delete(workspace_id As String) As Boolean
             Dim StrBuff As New StringBuilder
-            StrBuff.AppendLine($"Delete FROM tapd_story_changes where workspace_id='{workspace_id}' and collect_date='{IM_JsDate.GetNowStr("yyyy-MM-dd")}'")
+            StrBuff.Append($"Delete FROM tapd_story_changes where workspace_id='{workspace_id}' ")
+            If Cfg_Constant.IsKeepHistory=True Then
+                StrBuff.Append($" And collect_date='{IM_JsDate.GetNowStr("yyyy-MM-dd")}'")
+            End If
             IM_Log.Showlog($"执行Sql语句：{IM_AppPath.NewLine()}{StrBuff.ToString()}", MsgType.DebugMsg)
             Dim data As IDataAccess = DbFactory.CreateConnection("MicroWork")
             Dim result = 1

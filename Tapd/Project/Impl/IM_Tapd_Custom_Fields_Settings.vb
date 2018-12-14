@@ -1,8 +1,8 @@
 ﻿
 Imports System.Data
-Imports System.Reflection
 Imports System.Text
 Imports Newtonsoft.Json
+Imports TapdCollect.Tapd.Global.Config
 Imports TapdCollect.Tapd.Global.Model
 Imports TapdCollect.Tapd.Project.Model
 Imports TapdCollect.Utils.DataBase
@@ -17,7 +17,10 @@ Namespace Tapd.Project.Impl
     Public Class IM_Tapd_Custom_Fields_Settings
         Public Shared Function Delete(ByVal workspace_id As String) As Boolean
             Dim StrBuff As New StringBuilder
-            StrBuff.AppendLine($"Delete FROM tapd_custom_fields_settings where workspace_id='{workspace_id}' and collect_date='{IM_JsDate.GetNowStr("yyyy-MM-dd")}'")
+            StrBuff.Append($"Delete FROM tapd_custom_fields_settings where workspace_id='{workspace_id}' ")
+            If Cfg_Constant.IsKeepHistory=True Then
+                StrBuff.Append($" And collect_date='{IM_JsDate.GetNowStr("yyyy-MM-dd")}'")
+            End If
             IM_Log.Showlog($"执行Sql语句：{IM_AppPath.NewLine()}{StrBuff.ToString()}", MsgType.DebugMsg)
             Dim data As IDataAccess = DbFactory.CreateConnection("MicroWork")
             Dim result = 1

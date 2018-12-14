@@ -1,12 +1,6 @@
-﻿Imports System.Collections.Immutable
-Imports System.Data
-Imports System.Reflection
+﻿Imports System.Data
 Imports System.Text
-Imports Newtonsoft.Json
-Imports Newtonsoft.Json.Linq
-Imports TapdCollect.Tapd.Global.Model
-Imports TapdCollect.Tapd.Story.Model
-Imports TapdCollect.Tapd.Workflow.Model
+Imports TapdCollect.Tapd.Global.Config
 Imports TapdCollect.Utils.DataBase
 Imports TapdCollect.Utils.DataBase.API
 Imports TapdCollect.Utils.DataBase.Model
@@ -19,7 +13,10 @@ Namespace Tapd.Workflow.Impl
     Public Class IM_Tapd_StatusMap
         Public Shared Function Delete(ByVal workspace_id As String) As Boolean
             Dim StrBuff As New StringBuilder
-            StrBuff.AppendLine($"Delete FROM tapd_statusmap where workspace_id='{workspace_id}' and collect_date='{IM_JsDate.GetNowStr("yyyy-MM-dd")}'")
+            StrBuff.Append($"Delete FROM tapd_statusmap where workspace_id='{workspace_id}' ")
+            If Cfg_Constant.IsKeepHistory=True Then
+                StrBuff.Append($" And collect_date='{IM_JsDate.GetNowStr("yyyy-MM-dd")}'")
+            End If
             IM_Log.Showlog($"执行Sql语句：{IM_AppPath.NewLine()}{StrBuff.ToString()}", MsgType.DebugMsg)
             Dim data As IDataAccess = DbFactory.CreateConnection("MicroWork")
             Dim result = 1

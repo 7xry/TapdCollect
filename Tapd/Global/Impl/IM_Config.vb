@@ -26,7 +26,9 @@ Namespace Tapd.Global.Impl
             AuthUserName=IM_DES3.DecryptBase64Str(cfg.Api_User,Cfg_Constant.DKey,Cfg_Constant.DV)
             AuthPassWord=IM_DES3.DecryptBase64Str(cfg.Api_Password,Cfg_Constant.DKey,Cfg_Constant.DV)
             CompanyId=IM_DES3.DecryptBase64Str(cfg.CompanyId,Cfg_Constant.DKey,Cfg_Constant.DV)
-            PageLimit=IM_DES3.DecryptBase64Str(cfg.PageLimit,Cfg_Constant.DKey,Cfg_Constant.DV)
+            PageLimit=CType(IM_DES3.DecryptBase64Str(cfg.PageLimit,Cfg_Constant.DKey,Cfg_Constant.DV),Integer)
+            RetryLimit=CType(IM_DES3.DecryptBase64Str(cfg.RetryLimit,Cfg_Constant.DKey,Cfg_Constant.DV),Integer)
+            IsKeepHistory=CType(IM_DES3.DecryptBase64Str(cfg.IsKeepHistory,Cfg_Constant.DKey,Cfg_Constant.DV),Boolean)
             Dim DataBaseConn As String=IM_DES3.DecryptBase64Str(cfg.DataBaseConn,Cfg_Constant.DKey,Cfg_Constant.DV)
             DbConnDict.TapdCollect=New DataCase(DbTypeEnum.Mysql,DataBaseConn)
         Catch ex As Exception
@@ -44,11 +46,13 @@ Namespace Tapd.Global.Impl
         IM_Log.Showlog($"===================================     配置文件自动生成工具     ===================================", MsgType.InfoMsg)
         IM_Log.Showlog($"====================================================================================================", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 请按提示信息依次输入以下信息", MsgType.InfoMsg)
-        IM_Log.Showlog($">>>>>>>>>> 1、Api_User", MsgType.InfoMsg)
-        IM_Log.Showlog($">>>>>>>>>> 2、Api_Password", MsgType.InfoMsg)
-        IM_Log.Showlog($">>>>>>>>>> 3、CompanyId", MsgType.InfoMsg)
-        IM_Log.Showlog($">>>>>>>>>> 4、PageLimit", MsgType.InfoMsg)
-        IM_Log.Showlog($">>>>>>>>>> 5、DataBaseConn", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 1、Api_User  - API帐号", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 2、Api_Password  - API口令", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 3、CompanyId  - 公司ID", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 4、PageLimit  - 每次请求最大数量", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 5、RetryLimit  - 出错后重试次数", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 6、IsKeepHistory  - 是否保留历史记录", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 7、DataBaseConn  - 数据库连接配置", MsgType.InfoMsg)
         IM_Log.Showlog($"====================================================================================================", MsgType.InfoMsg)
         IM_Log.Showlog($"DataBaseConn 请参考如下配置：", MsgType.InfoMsg)
         IM_Log.Showlog($"Server=xx;Database=Tapd;User=xx;Password=xx;pooling=False;port=xx;Charset=utf8;Allow Zero Datetime=True;", MsgType.InfoMsg)
@@ -58,6 +62,8 @@ Namespace Tapd.Global.Impl
         cfg.Api_Password=IM_DES3.EncryptBase64Str(InputCheck("Api_Password"),Cfg_Constant.DKey,Cfg_Constant.DV)
         cfg.CompanyId=IM_DES3.EncryptBase64Str(InputCheck("CompanyId"),Cfg_Constant.DKey,Cfg_Constant.DV)
         cfg.PageLimit=IM_DES3.EncryptBase64Str(GetPageLimit("PageLimit","可选范围：1～200"),Cfg_Constant.DKey,Cfg_Constant.DV)
+        cfg.RetryLimit=IM_DES3.EncryptBase64Str(GetRetryLimit("RetryLimit","可选范围：0～10"),Cfg_Constant.DKey,Cfg_Constant.DV)
+        cfg.IsKeepHistory=IM_DES3.EncryptBase64Str(GetIsKeepHistory("IsKeepHistory"),Cfg_Constant.DKey,Cfg_Constant.DV)
         cfg.DataBaseConn=IM_DES3.EncryptBase64Str(InputCheck("DataBaseConn"),Cfg_Constant.DKey,Cfg_Constant.DV)
         Dim ConfigStr As String=IM_DES3.EncryptBase64Str(JsonConvert.SerializeObject(cfg),Cfg_Constant.DKey,Cfg_Constant.DV)
         IM_Export.SaveConfig(ConfigStr)
@@ -107,6 +113,26 @@ Namespace Tapd.Global.Impl
         Return InputStr
     End Function
 
+    Private Shared Function GetIsKeepHistory(ByVal inputValue As String) As String
+        Dim IsKeep As String="True"
+        Dim logMsg As String=$"请输入 [ {inputValue} ]（可选范围：0-不保留，1-保留）："
+        IM_Log.Showlog($"{logMsg}",MsgType.InfoMsg)
+        Dim InputStr As String = Console.ReadLine().Trim()
+        Select Case InputStr.Trim().ToUpper()
+            Case 0
+                IsKeep="False"
+            Case 1
+                IsKeep="True"
+            Case Else
+                IM_Log.Showlog($"输入的内容无效，请重新输入！", MsgType.InfoMsg)
+                Return InputCheck(inputValue)
+        End Select
+        If IM_Log.ShowConfirm($"{InputStr}")=False Then
+            Return GetIsKeepHistory(InputStr)
+        End If
+        Return IsKeep
+    End Function
+
     Private Shared Function GetPageLimit(ByVal inputValue As String, ByVal Optional remindInfo As String="") As String
         Dim limit As String=InputCheck(inputValue,remindInfo)
         Try
@@ -118,6 +144,21 @@ Namespace Tapd.Global.Impl
             IM_Log.Showlog($"输入的 [ PageLimit ] 范围无效，请重新输入！", MsgType.InfoMsg)
             IM_Log.Showlog(ex.ToString(),MsgType.ErrorMsg)
             GetPageLimit(inputValue,remindInfo)
+        End Try
+        Return limit
+    End Function
+
+    Private Shared Function GetRetryLimit(ByVal inputValue As String, ByVal Optional remindInfo As String="") As String
+        Dim limit As String=InputCheck(inputValue,remindInfo)
+        Try
+            If CInt(limit)<0 or CInt(limit)>10 Then
+                IM_Log.Showlog($"输入的 [ RetryLimit ] 范围无效，请重新输入！", MsgType.InfoMsg)
+                GetRetryLimit(inputValue,remindInfo)
+            End If
+        Catch ex As Exception
+            IM_Log.Showlog($"输入的 [ RetryLimit ] 范围无效，请重新输入！", MsgType.InfoMsg)
+            IM_Log.Showlog(ex.ToString(),MsgType.ErrorMsg)
+            GetRetryLimit(inputValue,remindInfo)
         End Try
         Return limit
     End Function
