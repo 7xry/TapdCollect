@@ -25,6 +25,9 @@
 自动执行（单个功能）：dotnet TapdCollect.dll 1  
 自动执行（多个功能）：dotnet TapdCollect.dll 1 2 3 4 5 6 7 8 13 14  
 多个功能的配置，请在每个功能参数后面加上空格  
+
+1.0.0
+支持上述功能，并且支持失败重试（重试次数自定义），允许选择是否保留历史记录  
   
 .Net Core Runtime 下载地址：  
 windows：https://download.visualstudio.microsoft.com/download/pr/48adfc75-bce7-4621-ae7a-5f3c4cf4fc1f/9a8e07173697581a6ada4bf04c845a05/dotnet-hosting-2.2.0-win.exe  
