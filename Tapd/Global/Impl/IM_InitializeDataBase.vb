@@ -23,6 +23,7 @@ Namespace Tapd.Global.Impl
             Init_tapd_bug_changes()
             Init_tapd_launch_forms()
             Init_tapd_releases()
+            Init_tapd_relations()
         End Sub
 
         ''' <summary>
@@ -803,6 +804,35 @@ Namespace Tapd.Global.Impl
             SqlList.Add(New SqlData(StrBuff.ToString(),Nothing))
             ExcuteInit(SqlList)
         End Sub
+
+        ''' <summary>
+        '''     15、初始化关联关系表
+        ''' </summary>
+        Private Shared Sub Init_tapd_relations()
+            Dim SqlList As New List(Of SqlData)
+            Dim StrBuff As New StringBuilder
+            StrBuff.AppendLine($"       DROP TABLE IF EXISTS `tapd_relations`;")
+            SqlList.Add(New SqlData(StrBuff.ToString(),Nothing))
+            StrBuff= New StringBuilder
+                StrBuff.AppendLine($"       DROP TABLE IF EXISTS `tapd_relations`;")
+                StrBuff.AppendLine($"       CREATE TABLE `tapd_relations`  (")
+                StrBuff.AppendLine($"         `sysid` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '系统编号',")
+                StrBuff.AppendLine($"         `id` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '主键ID',")
+                StrBuff.AppendLine($"         `workspace_id` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '项目ID',")
+                StrBuff.AppendLine($"         `source_type` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '关联关系源对象类型',")
+                StrBuff.AppendLine($"         `source_id` varchar(25) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '关联关系源对象id',")
+                StrBuff.AppendLine($"         `target_type` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '关联关系目标对象类型',")
+                StrBuff.AppendLine($"         `target_id` varchar(25) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '关联关系目标对象id',")
+                StrBuff.AppendLine($"         `modified` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '最后修改时间',")
+                StrBuff.AppendLine($"         `created` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '创建时间',")
+                StrBuff.AppendLine($"         `url` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '关联关系地址',")
+                StrBuff.AppendLine($"         `collect_date` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '采集日期',")
+                StrBuff.AppendLine($"         PRIMARY KEY (`sysid`) USING BTREE")
+                StrBuff.AppendLine($"       ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;")
+            SqlList.Add(New SqlData(StrBuff.ToString(),Nothing))
+            ExcuteInit(SqlList)
+        End Sub
+
         Private Shared Function ExcuteInit(ByVal SqlList As List(Of SqlData)) As Boolean
             Dim data As IDataAccess = DbFactory.CreateConnection("TapdCollect")
             Dim result = 1

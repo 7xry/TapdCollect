@@ -6,6 +6,7 @@ Imports TapdCollect.Tapd.Global.Model
 Imports TapdCollect.Tapd.LaunchForm.Impl
 Imports TapdCollect.Tapd.Project.Impl
 Imports TapdCollect.Tapd.Project.Model
+Imports TapdCollect.Tapd.Relation.Impl
 Imports TapdCollect.Tapd.Release.Impl
 Imports TapdCollect.Tapd.Story.Impl
 Imports TapdCollect.Tapd.Task.Impl
@@ -74,6 +75,7 @@ Module Program
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 12 ] , 开始 [ 同步缺陷变更历史 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 13 ] , 开始 [ 同步发布评审 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 14 ] , 开始 [ 同步发布计划 ]", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 输入 [ 15 ] , 开始 [ 同步关联关系 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 97 ] , 开始 [ 删除配置文件 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 98 ] , 开始 [ 重置配置文件 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 99 ] , 开始 [ 初始化数据库 ]", MsgType.InfoMsg)
@@ -93,7 +95,7 @@ Module Program
         For CurIdx = 0 To OperateArgs.Count() - 1
             Dim Operate As String = OperateArgs(CurIdx)
             If CurIdx = 0 And Operate = 0 Then
-                For opIdx = 1 To 12
+                For opIdx = 1 To 15
                     result = SelectFunction(opIdx.ToString(), IsManual)
                     If result = False Then
                         Exit For
@@ -155,6 +157,8 @@ Module Program
                 result = SyscLaunchForms(IsManual)
             Case 14, "14", "发布计划"
                 result = SyscReleases(IsManual)
+            Case 15, "15", "关联关系"
+                result = SyscRelations(IsManual)
             Case 97, "97", "删除配置文件"
                 IM_Config.DeleteConfiguration()
             Case 98, "98", "重置配置文件"
@@ -1125,6 +1129,62 @@ Module Program
         sw.Stop()
         If ResultFlag = True Then
             IM_Log.Showlog($"同步的{operate}成功！共计同步 {ProjectList.Count} 个项目，共计耗时 {Math.Round(sw.Elapsed.TotalSeconds, 0)} 秒", MsgType.InfoMsg)
+            Return True
+        Else
+            IM_Log.Showlog($"同步的{operate}失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+    End Function
+
+    ''' <summary>
+    '''     15、同步关联关系
+    ''' </summary>
+    ''' <param name="ShowConfirm">是否需要确认</param>
+    Private Function SyscRelations(ByVal Optional ShowConfirm As Boolean = True) As Boolean
+        Dim operate = "关联关系"
+        If CheckConfirm("SyscRelations", ShowConfirm) = False Then
+            Return True
+        End If
+        Dim sw As New Stopwatch
+        sw.Start()
+        Dim ProjectList As List(Of MD_Tapd_Project) = IM_Tapd_Project.GetList()
+        If ProjectList Is Nothing Then
+            IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+        Dim ResultFlag = False
+        For projectIdx = 0 To ProjectList.Count - 1
+            Dim project As MD_Tapd_Project = ProjectList(projectIdx)
+            IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
+            Dim workspace_id as String = project.id
+            If IM_Tapd_Relations.Delete(workspace_id) = False Then
+                IM_Log.Showlog($"删除{workspace_id}{operate}失败！", MsgType.ErrorMsg)
+                Return False
+            End If
+            Dim ReqParm As New MD_Request() With{
+                    .BaseUrl=BaseUrl,
+                    .RequestUrl=Relations,
+                    .ParmStr=$"workspace_id={workspace_id}"
+                    }
+            Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+            If tapd Is Nothing Then
+                IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                Exit For
+            End If
+            ResultFlag = IM_Tapd_Relations.Sync(tapd)
+            If ResultFlag = False Then
+                Exit For
+            End If
+            If ResultFlag = True Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}成功！", MsgType.InfoMsg)
+            Else
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If
+        Next
+        sw.Stop()
+        If ResultFlag = True Then
+            IM_Log.Showlog($"同步的{operate}成功！共计同步 {ProjectList.Count} 个项目,共计耗时 {Math.Round(sw.Elapsed.TotalSeconds, 0)} 秒", MsgType.InfoMsg)
             Return True
         Else
             IM_Log.Showlog($"同步的{operate}失败！", MsgType.ErrorMsg)
