@@ -1,4 +1,5 @@
 Imports Newtonsoft.Json
+Imports Newtonsoft.Json.Linq
 Imports TapdCollect.Tapd.Bug.Impl
 Imports TapdCollect.Tapd.Global.Config
 Imports TapdCollect.Tapd.Global.Impl
@@ -1161,20 +1162,25 @@ Module Program
                 IM_Log.Showlog($"删除{workspace_id}{operate}失败！", MsgType.ErrorMsg)
                 Return False
             End If
-            Dim ReqParm As New MD_Request() With{
-                    .BaseUrl=BaseUrl,
-                    .RequestUrl=Relations,
-                    .ParmStr=$"workspace_id={workspace_id}"
-                    }
-            Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
-            If tapd Is Nothing Then
-                IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
-                Exit For
-            End If
-            ResultFlag = IM_Tapd_Relations.Sync(tapd)
-            If ResultFlag = False Then
-                Exit For
-            End If
+            For CurIdx As Integer=1 To 9999
+                Dim ReqParm As New MD_Request() With{
+                        .BaseUrl=BaseUrl,
+                        .RequestUrl=Relations,
+                        .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
+                        }
+                Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If CType(tapd.data,IList).Count=0 Then
+                    Exit For
+                End If
+                ResultFlag = IM_Tapd_Relations.Sync(tapd)
+                If ResultFlag = False Then
+                    Exit For
+                End If
+            Next
             If ResultFlag = True Then
                 IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}成功！", MsgType.InfoMsg)
             Else
