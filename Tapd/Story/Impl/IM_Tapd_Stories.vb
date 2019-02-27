@@ -130,6 +130,13 @@ Namespace Tapd.Story.Impl
                         Return False
                     End If
                     Dim story = JsonConvert.DeserializeObject(Of MD_Tapd_Stories)(TData("Story").ToString())
+                    If story.owner IsNot Nothing And story.owner<>"" Then
+                        If story.owner.EndsWith(";")=False Then
+                            story.owner+=";"
+                        End If
+                    Else 
+                        story.owner="TapdSystem;"
+                    End If
                     Dim par = New QueryParameter() {New QueryParameter("@id", story.id, DbType.String),
                                                     New QueryParameter("@name", story.name, DbType.String),
                                                     New QueryParameter("@description", Nothing, DbType.String),

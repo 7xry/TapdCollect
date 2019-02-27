@@ -63,6 +63,11 @@ Namespace Tapd.Global.Config
         '发布计划
         Public Const Releases as String="releases"
         Public Const ReleasesCount as String="releases/count"
-
+        '模块
+        Public Const Modules as String="modules"
+        Public Const ModulesCount as String="modules/count"
+        '花费
+        Public Const TimeSheets as String="timesheets"
+        Public Const TimeSheetsCount as String="timesheets/count"
     End Module
 End NameSpace

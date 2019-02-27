@@ -90,6 +90,13 @@ Namespace Tapd.Task.Impl
                         Return False
                     End If
                     Dim task = JsonConvert.DeserializeObject(Of MD_Tapd_Tasks)(TData("Task").ToString())
+                    If task.owner IsNot Nothing And task.owner<>"" Then
+                        If task.owner.EndsWith(";")=False Then
+                            task.owner+=";"
+                        End If
+                    Else 
+                        task.owner="TapdSystem;"
+                    End If
                     Dim par = New QueryParameter() {New QueryParameter("@id", task.id, DbType.String),
                                                     New QueryParameter("@name", task.name, DbType.String),
                                                     New QueryParameter("@description", Nothing, DbType.String),

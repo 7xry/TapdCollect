@@ -6,7 +6,7 @@ Namespace Tapd.Global.Model
         ''' 状态
         ''' </summary>
         ''' <returns>status [ 状态 ] By Jobject</returns>
-        Property status As JValue
+        Property status As Integer
         ''' <summary>
         ''' 数据
         ''' </summary>
@@ -16,6 +16,6 @@ Namespace Tapd.Global.Model
         ''' 消息
         ''' </summary>
         ''' <returns>info [ 消息 ] By Jobject</returns>
-        Property info As JValue
+        Property info As String
     End Class
 End Namespace

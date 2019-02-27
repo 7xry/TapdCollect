@@ -1,4 +1,5 @@
 ﻿Imports System.Data
+Imports System.Security.Policy
 Imports System.Text
 Imports Newtonsoft.Json
 Imports TapdCollect.Tapd.Bug.Model
@@ -121,6 +122,14 @@ Namespace Tapd.Bug.Impl
                         Return False
                     End If
                     Dim bug = JsonConvert.DeserializeObject(Of MD_Tapd_Bugs)(TData("Bug").ToString())
+                    If bug.current_owner IsNot Nothing And bug.current_owner<>"" Then
+                        If bug.current_owner.EndsWith(";")=False Then
+                            bug.current_owner+=";"
+                        End If
+                    Else 
+                        bug.current_owner="TapdSystem;"
+                    End If
+                    
                     Dim par = New QueryParameter() {New QueryParameter("@id", bug.id, DbType.String),
                                                     New QueryParameter("@title", bug.title, DbType.String),
                                                     New QueryParameter("@description", Nothing, DbType.String),

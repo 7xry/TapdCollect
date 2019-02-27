@@ -1,10 +1,13 @@
 Imports Newtonsoft.Json
 Imports Newtonsoft.Json.Linq
 Imports TapdCollect.Tapd.Bug.Impl
+Imports TapdCollect.Tapd.Comment.Impl
 Imports TapdCollect.Tapd.Global.Config
 Imports TapdCollect.Tapd.Global.Impl
 Imports TapdCollect.Tapd.Global.Model
+Imports TapdCollect.Tapd.Iteration.Impl
 Imports TapdCollect.Tapd.LaunchForm.Impl
+Imports TapdCollect.Tapd.Modules.Impl
 Imports TapdCollect.Tapd.Project.Impl
 Imports TapdCollect.Tapd.Project.Model
 Imports TapdCollect.Tapd.Relation.Impl
@@ -12,6 +15,7 @@ Imports TapdCollect.Tapd.Release.Impl
 Imports TapdCollect.Tapd.Story.Impl
 Imports TapdCollect.Tapd.Task.Impl
 Imports TapdCollect.Tapd.TCase.Impl
+Imports TapdCollect.Tapd.TimeSheet.Impl
 Imports TapdCollect.Tapd.Workflow.Impl
 Imports TapdCollect.Utils.FileSystem.Dict
 Imports TapdCollect.Utils.FileSystem.Impl.Log
@@ -28,7 +32,7 @@ Module Program
             For CurIdx = 0 To args.Count() - 1
                 Dim Operate As String = args(CurIdx)
                 If CurIdx = 0 And Operate = 0 Then
-                    For opIdx = 1 To 12
+                    For opIdx = 1 To 19
                         result = SelectFunction(opIdx.ToString(), False)
                         If result = False Then
                             Exit For
@@ -77,6 +81,10 @@ Module Program
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 13 ] , 开始 [ 同步发布评审 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 14 ] , 开始 [ 同步发布计划 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 15 ] , 开始 [ 同步关联关系 ]", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 输入 [ 16 ] , 开始 [ 同步模块 ]", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 输入 [ 17 ] , 开始 [ 同步花费 ]", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 输入 [ 18 ] , 开始 [ 同步迭代 ]", MsgType.InfoMsg)
+        IM_Log.Showlog($">>>>>>>>>> 输入 [ 19 ] , 开始 [ 同步评论 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 97 ] , 开始 [ 删除配置文件 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 98 ] , 开始 [ 重置配置文件 ]", MsgType.InfoMsg)
         IM_Log.Showlog($">>>>>>>>>> 输入 [ 99 ] , 开始 [ 初始化数据库 ]", MsgType.InfoMsg)
@@ -96,7 +104,7 @@ Module Program
         For CurIdx = 0 To OperateArgs.Count() - 1
             Dim Operate As String = OperateArgs(CurIdx)
             If CurIdx = 0 And Operate = 0 Then
-                For opIdx = 1 To 15
+                For opIdx = 1 To 19
                     result = SelectFunction(opIdx.ToString(), IsManual)
                     If result = False Then
                         Exit For
@@ -160,6 +168,14 @@ Module Program
                 result = SyscReleases(IsManual)
             Case 15, "15", "关联关系"
                 result = SyscRelations(IsManual)
+            Case 16, "16", "模块"
+                result = SyscModules(IsManual)
+            Case 17, "17", "花费"
+                result = SyscTimeSheets(IsManual)
+            Case 18, "18", "迭代"
+                result = SyscIterations(IsManual)
+            Case 19, "19", "评论"
+                result = SyscComments(IsManual)
             Case 97, "97", "删除配置文件"
                 IM_Config.DeleteConfiguration()
             Case 98, "98", "重置配置文件"
@@ -219,6 +235,10 @@ Module Program
             IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
             Return False
         End If
+        If tapd.status <> 1 Then
+            IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+            Return False
+        End If
         If IM_Tapd_Project.Delete = False Then
             IM_Log.Showlog($"删除{operate}失败！", MsgType.InfoMsg)
             IM_Log.WaitForDo()
@@ -270,6 +290,10 @@ Module Program
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
                 If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
@@ -330,6 +354,10 @@ Module Program
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
                 If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
@@ -404,6 +432,10 @@ Module Program
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Story_Categories.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -472,6 +504,10 @@ Module Program
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
                 If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
@@ -546,6 +582,10 @@ Module Program
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Stories.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -614,6 +654,10 @@ Module Program
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
                 If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
@@ -689,6 +733,10 @@ Module Program
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Tasks.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -757,6 +805,10 @@ Module Program
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
                 If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
@@ -831,6 +883,10 @@ Module Program
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_TCases.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -899,6 +955,10 @@ Module Program
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
                 If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
@@ -973,6 +1033,10 @@ Module Program
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Bug_Changes.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -1041,6 +1105,10 @@ Module Program
                         }
                 Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
                 If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
@@ -1115,6 +1183,10 @@ Module Program
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 ResultFlag = IM_Tapd_Releases.Sync(tapd)
                 If ResultFlag = False Then
                     Exit For
@@ -1173,7 +1245,12 @@ Module Program
                     IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
                     Exit For
                 End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
                 If CType(tapd.data,IList).Count=0 Then
+                    ResultFlag = True
                     Exit For
                 End If
                 ResultFlag = IM_Tapd_Relations.Sync(tapd)
@@ -1191,6 +1268,306 @@ Module Program
         sw.Stop()
         If ResultFlag = True Then
             IM_Log.Showlog($"同步的{operate}成功！共计同步 {ProjectList.Count} 个项目,共计耗时 {Math.Round(sw.Elapsed.TotalSeconds, 0)} 秒", MsgType.InfoMsg)
+            Return True
+        Else
+            IM_Log.Showlog($"同步的{operate}失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+    End Function
+
+    ''' <summary>
+    '''     16、同步模块
+    ''' </summary>
+    ''' <param name="ShowConfirm">是否需要确认</param>
+    Private Function SyscModules(ByVal Optional ShowConfirm As Boolean = True) As Boolean
+        Dim operate = "模块"
+        If CheckConfirm("SyscModules", ShowConfirm) = False Then
+            Return True
+        End If
+        Dim sw As New Stopwatch
+        sw.Start()
+        Dim ProjectList As List(Of MD_Tapd_Project) = IM_Tapd_Project.GetList()
+        If ProjectList Is Nothing Then
+            IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+        Dim ResultFlag = False
+        For projectIdx = 0 To ProjectList.Count - 1
+            Dim project As MD_Tapd_Project = ProjectList(projectIdx)
+            IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
+            Dim workspace_id as String = project.id
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Modules.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
+            Dim MaxPage = CInt(MaxCount\PageLimit)
+            If MaxCount Mod PageLimit > 0 Then
+                MaxPage += 1
+            End If
+            If MaxCount <= 0 Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}数量为{MaxCount}，跳过同步！", MsgType.InfoMsg)
+                Continue For
+            End If
+            If IM_Tapd_Modules.Delete(workspace_id) = False Then
+                IM_Log.Showlog($"删除{workspace_id}{operate}失败！", MsgType.ErrorMsg)
+                Return False
+            End If
+            For CurIdx = 1 To MaxPage
+                Dim ReqParm As New MD_Request() With{
+                        .BaseUrl=BaseUrl,
+                        .RequestUrl=Modules,
+                        .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
+                        }
+                Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                ResultFlag = IM_Tapd_Modules.Sync(tapd)
+                If ResultFlag = False Then
+                    Exit For
+                End If
+            Next
+            If ResultFlag = True Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}成功！", MsgType.InfoMsg)
+            Else
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If
+        Next
+        sw.Stop()
+        If ResultFlag = True Then
+            IM_Log.Showlog($"同步的{operate}成功！共计同步 {ProjectList.Count} 个项目，共计耗时 {Math.Round(sw.Elapsed.TotalSeconds, 0)} 秒", MsgType.InfoMsg)
+            Return True
+        Else
+            IM_Log.Showlog($"同步的{operate}失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+    End Function
+
+    ''' <summary>
+    '''     17、同步花费
+    ''' </summary>
+    ''' <param name="ShowConfirm">是否需要确认</param>
+    Private Function SyscTimeSheets(ByVal Optional ShowConfirm As Boolean = True) As Boolean
+        Dim operate = "花费"
+        If CheckConfirm("SyscTimeSheets", ShowConfirm) = False Then
+            Return True
+        End If
+        Dim sw As New Stopwatch
+        sw.Start()
+        Dim ProjectList As List(Of MD_Tapd_Project) = IM_Tapd_Project.GetList()
+        If ProjectList Is Nothing Then
+            IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+        Dim ResultFlag = False
+        For projectIdx = 0 To ProjectList.Count - 1
+            Dim project As MD_Tapd_Project = ProjectList(projectIdx)
+            IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
+            Dim workspace_id as String = project.id
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_TimeSheets.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
+            Dim MaxPage = CInt(MaxCount\PageLimit)
+            If MaxCount Mod PageLimit > 0 Then
+                MaxPage += 1
+            End If
+            If MaxCount <= 0 Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}数量为{MaxCount}，跳过同步！", MsgType.InfoMsg)
+                Continue For
+            End If
+            If IM_Tapd_TimeSheets.Delete(workspace_id) = False Then
+                IM_Log.Showlog($"删除{workspace_id}{operate}失败！", MsgType.ErrorMsg)
+                Return False
+            End If
+            For CurIdx = 1 To MaxPage
+                Dim ReqParm As New MD_Request() With{
+                        .BaseUrl=BaseUrl,
+                        .RequestUrl=TimeSheets,
+                        .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
+                        }
+                Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                ResultFlag = IM_Tapd_TimeSheets.Sync(tapd)
+                If ResultFlag = False Then
+                    Exit For
+                End If
+            Next
+            If ResultFlag = True Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}成功！", MsgType.InfoMsg)
+            Else
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If
+        Next
+        sw.Stop()
+        If ResultFlag = True Then
+            IM_Log.Showlog($"同步的{operate}成功！共计同步 {ProjectList.Count} 个项目，共计耗时 {Math.Round(sw.Elapsed.TotalSeconds, 0)} 秒", MsgType.InfoMsg)
+            Return True
+        Else
+            IM_Log.Showlog($"同步的{operate}失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+    End Function
+
+    ''' <summary>
+    '''     18、同步迭代
+    ''' </summary>
+    ''' <param name="ShowConfirm">是否需要确认</param>
+    Private Function SyscIterations(ByVal Optional ShowConfirm As Boolean = True) As Boolean
+        Dim operate = "迭代"
+        If CheckConfirm("SyscIterations", ShowConfirm) = False Then
+            Return True
+        End If
+        Dim sw As New Stopwatch
+        sw.Start()
+        Dim ProjectList As List(Of MD_Tapd_Project) = IM_Tapd_Project.GetList()
+        If ProjectList Is Nothing Then
+            IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+        Dim ResultFlag = False
+        For projectIdx = 0 To ProjectList.Count - 1
+            Dim project As MD_Tapd_Project = ProjectList(projectIdx)
+            IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
+            Dim workspace_id as String = project.id
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Iterations.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
+            Dim MaxPage = CInt(MaxCount\PageLimit)
+            If MaxCount Mod PageLimit > 0 Then
+                MaxPage += 1
+            End If
+            If MaxCount <= 0 Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}数量为{MaxCount}，跳过同步！", MsgType.InfoMsg)
+                Continue For
+            End If
+            If IM_Tapd_Iterations.Delete(workspace_id) = False Then
+                IM_Log.Showlog($"删除{workspace_id}{operate}失败！", MsgType.ErrorMsg)
+                Return False
+            End If
+            For CurIdx = 1 To MaxPage
+                Dim ReqParm As New MD_Request() With{
+                        .BaseUrl=BaseUrl,
+                        .RequestUrl=Iterations,
+                        .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
+                        }
+                Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                ResultFlag = IM_Tapd_Iterations.Sync(tapd)
+                If ResultFlag = False Then
+                    Exit For
+                End If
+            Next
+            If ResultFlag = True Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}成功！", MsgType.InfoMsg)
+            Else
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If
+        Next
+        sw.Stop()
+        If ResultFlag = True Then
+            IM_Log.Showlog($"同步的{operate}成功！共计同步 {ProjectList.Count} 个项目，共计耗时 {Math.Round(sw.Elapsed.TotalSeconds, 0)} 秒", MsgType.InfoMsg)
+            Return True
+        Else
+            IM_Log.Showlog($"同步的{operate}失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+    End Function
+    
+    ''' <summary>
+    '''     19、同步评论
+    ''' </summary>
+    ''' <param name="ShowConfirm">是否需要确认</param>
+    Private Function SyscComments(ByVal Optional ShowConfirm As Boolean = True) As Boolean
+        Dim operate = "评论"
+        If CheckConfirm("SyscComments", ShowConfirm) = False Then
+            Return True
+        End If
+        Dim sw As New Stopwatch
+        sw.Start()
+        Dim ProjectList As List(Of MD_Tapd_Project) = IM_Tapd_Project.GetList()
+        If ProjectList Is Nothing Then
+            IM_Log.Showlog("项目列表为空，采集任务执行失败！", MsgType.ErrorMsg)
+            Return False
+        End If
+        Dim ResultFlag = False
+        For projectIdx = 0 To ProjectList.Count - 1
+            Dim project As MD_Tapd_Project = ProjectList(projectIdx)
+            IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}开始！", MsgType.InfoMsg)
+            Dim workspace_id as String = project.id
+            Dim MaxCount as Nullable(Of Integer) = IM_Tapd_Comments.GetCount(workspace_id)
+            If MaxCount Is Nothing Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If 
+            Dim MaxPage = CInt(MaxCount\PageLimit)
+            If MaxCount Mod PageLimit > 0 Then
+                MaxPage += 1
+            End If
+            If MaxCount <= 0 Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}数量为{MaxCount}，跳过同步！", MsgType.InfoMsg)
+                Continue For
+            End If
+            If IM_Tapd_Comments.Delete(workspace_id) = False Then
+                IM_Log.Showlog($"删除{workspace_id}{operate}失败！", MsgType.ErrorMsg)
+                Return False
+            End If
+            For CurIdx = 1 To MaxPage
+                Dim ReqParm As New MD_Request() With{
+                        .BaseUrl=BaseUrl,
+                        .RequestUrl=Comments,
+                        .ParmStr=$"workspace_id={workspace_id}&limit={PageLimit}&page={CurIdx}"
+                        }
+                Dim tapd As MD_Tapd = IM_Req.DoGet(ReqParm)
+                If tapd Is Nothing Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                If tapd.status <> 1 Then
+                    IM_Log.Showlog($"同步{operate}失败！接口请求返回异常", MsgType.ErrorMsg)
+                    Exit For
+                End If
+                ResultFlag = IM_Tapd_Comments.Sync(tapd)
+                If ResultFlag = False Then
+                    Exit For
+                End If
+            Next
+            If ResultFlag = True Then
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}成功！", MsgType.InfoMsg)
+            Else
+                IM_Log.Showlog($"同步 {projectIdx + 1}/{ProjectList.Count} - [ {project.id} ] {project.name} 的{operate}失败！", MsgType.ErrorMsg)
+                Exit For
+            End If
+        Next
+        sw.Stop()
+        If ResultFlag = True Then
+            IM_Log.Showlog($"同步的{operate}成功！共计同步 {ProjectList.Count} 个项目，共计耗时 {Math.Round(sw.Elapsed.TotalSeconds, 0)} 秒", MsgType.InfoMsg)
             Return True
         Else
             IM_Log.Showlog($"同步的{operate}失败！", MsgType.ErrorMsg)
